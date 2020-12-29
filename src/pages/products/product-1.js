@@ -73,7 +73,7 @@ class Contact extends React.Component {
 
   redirectToEditCampaign = () => {
 
-    console.log (this.state.selectedCampaignId , "selectedCampaignId 76" )
+   // console.log (this.state.selectedCampaignId , "selectedCampaignId 76" )
       
     console.log(this.state.selectedCampaign, "selectedCampaign 77 ")
 
@@ -254,11 +254,9 @@ class Contact extends React.Component {
 
 
       let obj = [];
-      obj = Defaultcards.filter(
-        (item) => item.album_id == temp_album_img_id
-      );
+      obj = Defaultcards.filter((item) => item.imageId === temp_album_img_id)
 
-      console.log(obj,"objj 246")
+      console.log(obj,"obj")
 
       let geturl = obj[0].imageUrl;
       let image_id_new = obj[0].imageId;
@@ -306,80 +304,53 @@ class Contact extends React.Component {
 
   } 
 
+  validatevoucher =(responsevoucher) =>{
+
+    if(responsevoucher && responsevoucher.data && !responsevoucher.data.createSendVoucher.error){
+
+      this.setState({
+        step:3,
+        points_name:'',
+        points_email:'',
+        points_value:'',
+        image_selected:DEFAULT_TEMPLATE.logo,
+        description:DEFAULT_TEMPLATE.heading,
+        subject:DEFAULT_TEMPLATE.subject,
+        image_id:DEFAULT_TEMPLATE.image_id
+      })
+
+    }
+  }
+
 
   submitXoxoVoucher = () =>{
+
+    var selfthis_voucher = this
 
 
 
 
     const send_voucher_map_data ={
+
       "user_token": this.state.token,
+      "site_id": this.state.selectedCampaign[0].value,
+      "to_name": JSON.stringify(this.state.points_name),
+      "to_email": JSON.stringify(this.state.points_email),
+      "denomination":this.state.points_value,
       "album_img_id": this.state.image_id ? this.state.image_id: DEFAULT_TEMPLATE.image_id,
-      "heading": this.state.description  ? this.state.description  : DEFAULT_TEMPLATE.heading,
-      "logo": this.state.image_selected  ? this.state.image_selected : DEFAULT_TEMPLATE.logo,
-      "subject": this.state.subject  ? this.state.subject : DEFAULT_TEMPLATE.subject,
-      "is_bulk": false,
-        "schedular_batch_id": "",
-        "schedule_type": 1,
-        "site_id": this.state.selectedCampaign[0].template_id,
-         "user_message": "",
-            "to_name": this.state.points_name,
-            "denomination": this.state.points_value,
-            "notes": "",
-            "quantity": 1,
-            "to_email": this.state.points_email,
-            "to_phone_code": "",
-            "to_phone_number": "",
+      "logo": JSON.stringify(this.state.image_selected  ? this.state.image_selected : DEFAULT_TEMPLATE.logo),
+      "heading": JSON.stringify(this.state.description  ? this.state.description  : DEFAULT_TEMPLATE.heading),
+      "subject": JSON.stringify(this.state.subject  ? this.state.subject : DEFAULT_TEMPLATE.subject)
    
      }
 
 
-
-
-    // let mail_details = {
-
-    //   album_img_id: this.state.image_id ? this.state.image_id: DEFAULT_TEMPLATE.image_id,
-    //   heading: this.state.description  ? this.state.description  : DEFAULT_TEMPLATE.heading,
-    //   logo: this.state.image_selected  ? this.state.image_selected : DEFAULT_TEMPLATE.logo,
-    //   subject: this.state.subject  ? this.state.subject : DEFAULT_TEMPLATE.subject,
-    
-    //   }
-
-    
-
-    // const send_voucher_map_data ={
-    //   "create_send_input": {
-    //     "is_bulk": false,
-    //     "mail_details": mail_details,
-    //     "schedular_batch_id": "",
-    //     "schedule_type": 1,
-    //     "site_id": this.state.selectedCampaign[0].template_id,
-    //     "vouchers": [
-    //       {
-    //         "user_message": "",
-    //         "to_name": this.state.points_name,
-    //         "denomination": this.state.points_value,
-    //         "notes": "",
-    //         "quantity": 1,
-    //         "to_email": this.state.points_email,
-    //         "to_phone_code": "",
-    //         "to_phone_number": "",
-    //       },
-    //     ],
-    //   },
-
-    // }
-
-    console.log(send_voucher_map_data, 'send_voucher_map_data')
-
-    
-    
-
-
-    ZOHO.CRM.CONNECTOR.invokeAPI("plumrewardingtest.rewardthroughplum.getCampaignheaderDetails", send_voucher_map_data)
+    ZOHO.CRM.CONNECTOR.invokeAPI("plumrewardingtest.rewardthroughplum.sendxoxovoucher", send_voucher_map_data)
     .then(function (response){
 
-      console.log( JSON.parse(response['response']) , 'xoxo response')
+      selfthis_voucher.validatevoucher(JSON.parse(response['response']))
+
+      
      
     })
 
@@ -651,7 +622,7 @@ class Contact extends React.Component {
   imageSelected = (event) => {
     //  console.log(event && event.target && event.target.currentSrc)
     this.setState({
-      primaryLogo: event && event.target && event.target.currentSrc,
+      imageSelected: event && event.target && event.target.currentSrc,
     });
   };
 
@@ -709,81 +680,7 @@ class Contact extends React.Component {
     this.setState({ step: 1 });
   };
 
-  sendVoucher = () => {
-    this.setState({
-      loader: true,
-    });
-
-    let mail_details = {
-      album_img_id: DEFAULT_TEMPLATE.image_id,
-      heading: this.state.subject
-        ? this.state.subject
-        : DEFAULT_TEMPLATE.heading,
-      logo: this.state.image_selected
-        ? this.state.image_selected
-        : DEFAULT_TEMPLATE.logo,
-      subject: this.state.description
-        ? this.state.subject
-        : DEFAULT_TEMPLATE.subject,
-    };
-
-    const request_data = {
-      query: "storesAdmin.mutation.createSendVoucher",
-      tag: "storeAdmin",
-      variables: {
-        create_send_input: {
-          is_bulk: false,
-          mail_details: mail_details,
-          schedular_batch_id: "",
-          schedule_type: 1,
-          site_id: "570",
-          vouchers: [
-            {
-              user_message: this.state.description,
-              to_name: this.state.points_name,
-              denomination: this.state.points_value,
-              notes: "",
-              quantity: 1,
-              to_email: this.state.points_email,
-              to_phone_code: "",
-              to_phone_number: "",
-            },
-          ],
-        },
-      },
-    };
-
-    makeRequestAuth(
-      request_data,
-      function (response) {
-        if (response && response.data && response.data.createSendVoucher) {
-          debugger;
-          console.log("xoxovoucher response", response);
-          if (response.data.createSendVoucher.error == false) {
-            this.setState({
-              //success:true,
-              step: 3,
-              message: response.data.createSendVoucher.message[0],
-              points_name: "",
-              points_email: "",
-              points_value: "",
-              loader: false,
-            });
-            //this.props.condPages(8)
-          } else if (response.data.createSendVoucher.error == true) {
-            this.setState({
-              loader: false,
-              //submit_loader:false,
-              //submit_button_disabled:true,
-              message: response.data.createSendVoucher.message[0]
-                ? response.data.createSendVoucher.message[0]
-                : "something went wrong.",
-            });
-          }
-        }
-      }.bind(this)
-    );
-  }
+  
 
   render() {
 
@@ -962,7 +859,10 @@ class Contact extends React.Component {
 
 
           <div style={{marginTop:'20px'}}className="mt-0 edit-campaign"> 
-          <span style={{cursor:"pointer", paddingTop:'10px',marginLeft:'12px'}} onClick={this.redirectToEditCampaign}>Edit Campaign</span></div>
+
+          {/* <span style={{cursor:"pointer", paddingTop:'10px',marginLeft:'12px'}} onClick={this.redirectToEditCampaign}>Edit Campaign</span> */}
+          
+          </div>
 
           {this.state.error_selected_campaign ? (
             <span style={{ color: "red", marginLeft: "14px" }}>
